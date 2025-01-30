@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"go-mma/config"
+	"go-mma/handlers"
 	"log"
 	"net/http"
 
@@ -59,6 +60,21 @@ func (app *Application) RegisterRoutes() {
 			"message": "Hello World",
 		})
 	})
+	v1 := app.httpRouter.Group("/api/v1")
+
+	rCustomer := v1.Group("/customers")
+	{
+		hdl := handlers.NewCustomerHandler()
+		rCustomer.POST("", hdl.CreateCustomer)
+	}
+
+	rOrder := v1.Group("/orders")
+	{
+		hdl := handlers.NewOrderHandler()
+		rOrder.POST("", hdl.CreateOrder)
+		rOrder.DELETE("", hdl.CancelOrder)
+	}
+
 }
 
 func (app *Application) Shutdown() error {
