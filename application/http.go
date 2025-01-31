@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"go-mma/config"
+	"go-mma/data/sqldb"
 	"go-mma/handlers"
 	"log"
 	"net/http"
@@ -63,7 +64,7 @@ func (s *httpServer) Router() *gin.Engine {
 	return s.router
 }
 
-func registerRoutes(r *gin.Engine) {
+func registerRoutes(r *gin.Engine, dbCtx sqldb.DBContext) {
 	r.GET("/", func(c *gin.Context) {
 		// time.Sleep(10 * time.Second)
 		c.JSON(http.StatusOK, gin.H{
