@@ -1,52 +1,31 @@
 package handlers
 
 import (
-	"context"
-	"go-mma/data/sqldb"
+	"go-mma/dtos"
+	"go-mma/services"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 type CustomerHandler struct {
-	dbCtx sqldb.DBContext
+	custServ *services.CustomerService
 }
 
-func NewCustomerHandler(dbCtx sqldb.DBContext) *CustomerHandler {
-	return &CustomerHandler{dbCtx: dbCtx}
+func NewCustomerHandler(custServ *services.CustomerService) *CustomerHandler {
+	return &CustomerHandler{custServ: custServ}
 }
 
 func (h *CustomerHandler) CreateCustomer(c *gin.Context) {
-	// Implement the logic to create an customer
-	type CreateCustomerRequest struct {
-		Name        string `json:"name"`
-		CreditLimit int    `json:"credit_limit"`
-	}
-	payload := CreateCustomerRequest{}
+	payload := dtos.CreateCustomerRequest{}
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// validate payload
-	if len(payload.Name) == 0 {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "name is required"})
-		return
-	}
+	id, err := h.custServ.CreateCustomer(c.Request.Context(), &payload)
 
-	if payload.CreditLimit <= 0 {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "credit_limit must be greater than 0"})
-		return
-	}
-
-	// save new customer to the database
-	sql := `INSERT INTO customers (name, credit_limit) VALUES ($1, $2) RETURNING id`
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
-	defer cancel()
-
-	var id int
-	if err := h.dbCtx.DB().QueryRowContext(ctx, sql, payload.Name, payload.CreditLimit).Scan(&id); err != nil {
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

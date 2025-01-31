@@ -6,6 +6,8 @@ import (
 	"go-mma/config"
 	"go-mma/data/sqldb"
 	"go-mma/handlers"
+	"go-mma/repository"
+	"go-mma/services"
 	"log"
 	"net/http"
 
@@ -40,7 +42,7 @@ func newRouter() *gin.Engine {
 	router := gin.Default()
 
 	// add default middlewares here
-	router.Use(gin.Logger())
+	// router.Use(gin.Logger())
 	// Recovery middleware recovers from any panics and writes a 500 if there was one.
 	router.Use(gin.Recovery())
 	router.Use(cors.Default()) // allows all origins
@@ -76,7 +78,9 @@ func registerRoutes(r *gin.Engine, dbCtx sqldb.DBContext) {
 
 	rCustomer := v1.Group("/customers")
 	{
-		hdl := handlers.NewCustomerHandler(dbCtx)
+		repo := repository.NewCustomerRepository(dbCtx)
+		serv := services.NewCustomerService(repo)
+		hdl := handlers.NewCustomerHandler(serv)
 		rCustomer.POST("", hdl.CreateCustomer)
 	}
 
