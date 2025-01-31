@@ -76,13 +76,13 @@ func registerRoutes(r *gin.Engine, dbCtx sqldb.DBContext) {
 
 	rCustomer := v1.Group("/customers")
 	{
-		hdl := handlers.NewCustomerHandler()
+		hdl := handlers.NewCustomerHandler(dbCtx)
 		rCustomer.POST("", hdl.CreateCustomer)
 	}
 
 	rOrder := v1.Group("/orders")
 	{
-		hdl := handlers.NewOrderHandler()
+		hdl := handlers.NewOrderHandler(dbCtx)
 		rOrder.POST("", hdl.CreateOrder)
 		rOrder.DELETE("/:id", hdl.CancelOrder)
 	}

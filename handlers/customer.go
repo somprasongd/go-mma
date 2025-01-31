@@ -2,16 +2,18 @@ package handlers
 
 import (
 	"fmt"
+	"go-mma/data/sqldb"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type CustomerHandler struct {
+	dbCtx sqldb.DBContext
 }
 
-func NewCustomerHandler() *CustomerHandler {
-	return &CustomerHandler{}
+func NewCustomerHandler(dbCtx sqldb.DBContext) *CustomerHandler {
+	return &CustomerHandler{dbCtx: dbCtx}
 }
 
 func (h *CustomerHandler) CreateCustomer(c *gin.Context) {

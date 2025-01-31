@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"go-mma/data/sqldb"
 	"log"
 	"net/http"
 
@@ -8,10 +9,11 @@ import (
 )
 
 type OrderHandler struct {
+	dbCtx sqldb.DBContext
 }
 
-func NewOrderHandler() *OrderHandler {
-	return &OrderHandler{}
+func NewOrderHandler(dbCtx sqldb.DBContext) *OrderHandler {
+	return &OrderHandler{dbCtx: dbCtx}
 }
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
