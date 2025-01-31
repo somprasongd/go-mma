@@ -6,7 +6,7 @@ POST {{host}}/{{base_url}} HTTP/1.1
 content-type: application/json
 
 {
-    "cutomer_id": "1",
+    "customer_id": 1,
     "order_total": 10
 }
 

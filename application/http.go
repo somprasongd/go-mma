@@ -86,7 +86,11 @@ func registerRoutes(r *gin.Engine, dbCtx sqldb.DBContext) {
 
 	rOrder := v1.Group("/orders")
 	{
-		hdl := handlers.NewOrderHandler(dbCtx)
+		repoCust := repository.NewCustomerRepository(dbCtx)
+		repoOrder := repository.NewOrderRepository(dbCtx)
+		servNoti := services.NewNotificationService()
+		serv := services.NewOrderService(repoCust, repoOrder, servNoti)
+		hdl := handlers.NewOrderHandler(serv)
 		rOrder.POST("", hdl.CreateOrder)
 		rOrder.DELETE("/:id", hdl.CancelOrder)
 	}

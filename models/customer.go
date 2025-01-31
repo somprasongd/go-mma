@@ -1,18 +1,38 @@
 package models
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type Customer struct {
 	ID          int       `db:"id"`
-	Name        string    `db:"name"`
+	Email       string    `db:"email"`
 	CreditLimit int       `db:"credit_limit"`
 	CreatedAt   time.Time `db:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at"`
 }
 
-func NewCustomer(name string, creditLimit int) *Customer {
+func NewCustomer(email string, creditLimit int) *Customer {
 	return &Customer{
-		Name:        name,
+		Email:       email,
 		CreditLimit: creditLimit,
 	}
+}
+
+func (c *Customer) ReserveCredit(v int) error {
+	newCreditLimit := c.CreditLimit - v
+	if newCreditLimit < 0 {
+		return fmt.Errorf("insufficient credit limit")
+	}
+	c.CreditLimit = newCreditLimit
+	return nil
+}
+
+func (c *Customer) ReleaseCredit(v int) error {
+	if c.CreditLimit <= 0 {
+		c.CreditLimit = 0
+	}
+	c.CreditLimit = c.CreditLimit + v
+	return nil
 }

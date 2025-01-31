@@ -18,7 +18,7 @@ func NewCustomerHandler(custServ *services.CustomerService) *CustomerHandler {
 
 func (h *CustomerHandler) CreateCustomer(c *gin.Context) {
 	payload := dtos.CreateCustomerRequest{}
-	if err := c.ShouldBindJSON(&payload); err != nil {
+	if err := c.BindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}

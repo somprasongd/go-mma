@@ -25,7 +25,7 @@ func (s *CustomerService) CreateCustomer(ctx context.Context, req *dtos.CreateCu
 	}
 
 	// create model
-	customer := models.NewCustomer(req.Name, req.CreditLimit)
+	customer := models.NewCustomer(req.Email, req.CreditLimit)
 
 	// save to database
 	if err := s.custRepo.Create(ctx, customer); err != nil {
