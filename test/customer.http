@@ -1,5 +1,6 @@
 @host = http://localhost:8080
 @base_url = api/v1/customers
+
 ### Create Customer
 POST {{host}}/{{base_url}} HTTP/1.1
 content-type: application/json

@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"fmt"
+	"context"
 	"go-mma/data/sqldb"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -28,9 +29,28 @@ func (h *CustomerHandler) CreateCustomer(c *gin.Context) {
 		return
 	}
 
+	// validate payload
+	if len(payload.Name) == 0 {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "name is required"})
+		return
+	}
+
+	if payload.CreditLimit <= 0 {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "credit_limit must be greater than 0"})
+		return
+	}
+
 	// save new customer to the database
-	fmt.Println("Creating new customer:", payload)
+	sql := `INSERT INTO customers (name, credit_limit) VALUES ($1, $2) RETURNING id`
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 30*time.Second)
+	defer cancel()
+
+	var id int
+	if err := h.dbCtx.DB().QueryRowContext(ctx, sql, payload.Name, payload.CreditLimit).Scan(&id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	// Return a success response
-	c.JSON(http.StatusCreated, gin.H{"message": "Customer created"})
+	c.JSON(http.StatusCreated, gin.H{"id": id})
 }
