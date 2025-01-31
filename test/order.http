@@ -1,0 +1,14 @@
+@host = http://localhost:8080
+@base_url = api/v1/orders
+
+### Create Order
+POST {{host}}/{{base_url}} HTTP/1.1
+content-type: application/json
+
+{
+    "cutomer_id": "1",
+    "order_total": 10
+}
+
+### Cancel Order
+DELETE {{host}}/{{base_url}}/1 HTTP/1.1

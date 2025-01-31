@@ -21,12 +21,14 @@ func (h *CustomerHandler) CreateCustomer(c *gin.Context) {
 		CreditLimit int    `json:"credit_limit"`
 	}
 	payload := CreateCustomerRequest{}
-	if err := c.BindJSON(&payload); err != nil {
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	fmt.Println("Received customer:", payload)
+	// save new customer to the database
+	fmt.Println("Creating new customer:", payload)
 
+	// Return a success response
 	c.JSON(http.StatusCreated, gin.H{"message": "Customer created"})
 }
