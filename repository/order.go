@@ -9,47 +9,53 @@ import (
 	"time"
 )
 
-type OrderRepository struct {
+const orderQueryTimeout = 20 * time.Second
+
+type OrderRepository interface {
+	Create(ctx context.Context, order *models.Order) error
+	FindByID(ctx context.Context, id int) (*models.Order, error)
+	Cancel(ctx context.Context, id int) error
+}
+
+type orderRepository struct {
 	dbCtx transactor.DBContext
 }
 
-func NewOrderRepository(dbCtx transactor.DBContext) *OrderRepository {
-	return &OrderRepository{
-		dbCtx: dbCtx,
-	}
+// NewOrderRepository returns an OrderRepository interface implementation.
+func NewOrderRepository(dbCtx transactor.DBContext) OrderRepository {
+	return &orderRepository{dbCtx: dbCtx}
 }
 
-func (r *OrderRepository) Create(ctx context.Context, m *models.Order) error {
+func (r *orderRepository) Create(ctx context.Context, order *models.Order) error {
 	query := `
-	INSERT INTO public.orders (
-			customer_id, order_total
-	)
-	VALUES ($1, $2)
-	RETURNING *
+		INSERT INTO public.orders (customer_id, order_total)
+		VALUES ($1, $2)
+		RETURNING id, customer_id, order_total, created_at
 	`
 
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, orderQueryTimeout)
 	defer cancel()
 
-	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, m.CustomerID, m.OrderTotal).StructScan(m)
+	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, order.CustomerID, order.OrderTotal).
+		Scan(&order.ID, &order.CustomerID, &order.OrderTotal, &order.CreatedAt)
 	if err != nil {
 		return fmt.Errorf("failed to create order: %w", err)
 	}
 	return nil
 }
 
-func (r *OrderRepository) FindByID(ctx context.Context, id int) (*models.Order, error) {
+func (r *orderRepository) FindByID(ctx context.Context, id int) (*models.Order, error) {
 	query := `
-	SELECT *
-	FROM public.orders
-	WHERE id = $1
-	AND canceled_at IS NULL
-`
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		SELECT id, customer_id, order_total, created_at, canceled_at
+		FROM public.orders
+		WHERE id = $1 AND canceled_at IS NULL
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, orderQueryTimeout)
 	defer cancel()
 
 	var order models.Order
-	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, id).StructScan(&order)
+	err := r.dbCtx(ctx).GetContext(ctx, &order, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -59,17 +65,22 @@ func (r *OrderRepository) FindByID(ctx context.Context, id int) (*models.Order, 
 	return &order, nil
 }
 
-func (r *OrderRepository) Cancel(ctx context.Context, id int) error {
+func (r *orderRepository) Cancel(ctx context.Context, id int) error {
 	query := `
-	UPDATE public.orders
-	SET canceled_at = current_timestamp
-	WHERE id = $1
-`
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		UPDATE public.orders
+		SET canceled_at = current_timestamp
+		WHERE id = $1
+		RETURNING canceled_at
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, orderQueryTimeout)
 	defer cancel()
-	_, err := r.dbCtx(ctx).ExecContext(ctx, query, id)
+
+	var canceledAt sql.NullTime
+	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, id).Scan(&canceledAt)
 	if err != nil {
 		return fmt.Errorf("failed to cancel order: %w", err)
 	}
+
 	return nil
 }

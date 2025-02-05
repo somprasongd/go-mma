@@ -2,14 +2,18 @@ package services
 
 import "log"
 
-type NotificationService struct {
+type NotificationService interface {
+	SendEmail(to string, subject string, payload map[string]any) error
 }
 
-func NewNotificationService() *NotificationService {
-	return &NotificationService{}
+type notificationService struct {
 }
 
-func (s *NotificationService) SendEmail(to string, subject string, payload map[string]any) error {
+func NewNotificationService() NotificationService {
+	return &notificationService{}
+}
+
+func (s *notificationService) SendEmail(to string, subject string, payload map[string]any) error {
 	// implement email sending logic here
 	log.Println("Sending email to", to, "with subject:", subject, "and payload:", payload)
 	return nil

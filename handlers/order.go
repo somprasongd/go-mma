@@ -9,15 +9,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type OrderHandler struct {
-	orderServ *services.OrderService
+type OrderHandler interface {
+	CreateOrder(c *gin.Context)
+	CancelOrder(c *gin.Context)
 }
 
-func NewOrderHandler(orderServ *services.OrderService) *OrderHandler {
-	return &OrderHandler{orderServ: orderServ}
+type orderHandler struct {
+	orderServ services.OrderService
 }
 
-func (h *OrderHandler) CreateOrder(c *gin.Context) {
+func NewOrderHandler(orderServ services.OrderService) OrderHandler {
+	return &orderHandler{orderServ: orderServ}
+}
+
+func (h *orderHandler) CreateOrder(c *gin.Context) {
 	payload := dtos.CreateOrderRequest{}
 	if err := c.BindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -34,7 +39,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": id})
 }
 
-func (h *OrderHandler) CancelOrder(c *gin.Context) {
+func (h *orderHandler) CancelOrder(c *gin.Context) {
 	id := c.Param("id")
 	orderID, err := strconv.Atoi(id)
 	if err != nil {

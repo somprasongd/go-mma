@@ -10,15 +10,20 @@ import (
 	"log"
 )
 
-type OrderService struct {
-	transactor  transactor.Transactor
-	custRepo    *repository.CustomerRepository
-	orderRepo   *repository.OrderRepository
-	notiService *NotificationService
+type OrderService interface {
+	CreateOrder(ctx context.Context, req *dtos.CreateOrderRequest) (int, error)
+	CancelOrder(ctx context.Context, id int) error
 }
 
-func NewOrderService(transactor transactor.Transactor, custRepo *repository.CustomerRepository, orderRepo *repository.OrderRepository, notiService *NotificationService) *OrderService {
-	return &OrderService{
+type orderService struct {
+	transactor  transactor.Transactor
+	custRepo    repository.CustomerRepository
+	orderRepo   repository.OrderRepository
+	notiService NotificationService
+}
+
+func NewOrderService(transactor transactor.Transactor, custRepo repository.CustomerRepository, orderRepo repository.OrderRepository, notiService NotificationService) OrderService {
+	return &orderService{
 		transactor:  transactor,
 		custRepo:    custRepo,
 		orderRepo:   orderRepo,
@@ -26,7 +31,7 @@ func NewOrderService(transactor transactor.Transactor, custRepo *repository.Cust
 	}
 }
 
-func (s *OrderService) CreateOrder(ctx context.Context, req *dtos.CreateOrderRequest) (int, error) {
+func (s *orderService) CreateOrder(ctx context.Context, req *dtos.CreateOrderRequest) (int, error) {
 	// validate request
 	if err := req.Validate(); err != nil {
 		return 0, err
@@ -77,7 +82,7 @@ func (s *OrderService) CreateOrder(ctx context.Context, req *dtos.CreateOrderReq
 	return orderId, nil
 }
 
-func (s *OrderService) CancelOrder(ctx context.Context, id int) error {
+func (s *orderService) CancelOrder(ctx context.Context, id int) error {
 	order, err := s.orderRepo.FindByID(ctx, id)
 	if err != nil {
 		log.Println(err)

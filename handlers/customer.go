@@ -8,15 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type CustomerHandler struct {
-	custServ *services.CustomerService
+type CustomerHandler interface {
+	CreateCustomer(c *gin.Context)
 }
 
-func NewCustomerHandler(custServ *services.CustomerService) *CustomerHandler {
-	return &CustomerHandler{custServ: custServ}
+type customerHandler struct {
+	custServ services.CustomerService
 }
 
-func (h *CustomerHandler) CreateCustomer(c *gin.Context) {
+func NewCustomerHandler(custServ services.CustomerService) CustomerHandler {
+	return &customerHandler{custServ: custServ}
+}
+
+func (h *customerHandler) CreateCustomer(c *gin.Context) {
 	payload := dtos.CreateCustomerRequest{}
 	if err := c.BindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

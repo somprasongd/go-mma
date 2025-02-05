@@ -8,17 +8,21 @@ import (
 	"log"
 )
 
-type CustomerService struct {
-	custRepo *repository.CustomerRepository
+type CustomerService interface {
+	CreateCustomer(ctx context.Context, req *dtos.CreateCustomerRequest) (int, error)
 }
 
-func NewCustomerService(custRepo *repository.CustomerRepository) *CustomerService {
-	return &CustomerService{
+type customerService struct {
+	custRepo repository.CustomerRepository
+}
+
+func NewCustomerService(custRepo repository.CustomerRepository) CustomerService {
+	return &customerService{
 		custRepo: custRepo,
 	}
 }
 
-func (s *CustomerService) CreateCustomer(ctx context.Context, req *dtos.CreateCustomerRequest) (int, error) {
+func (s *customerService) CreateCustomer(ctx context.Context, req *dtos.CreateCustomerRequest) (int, error) {
 	// validate the request
 	if err := req.Validate(); err != nil {
 		return 0, err

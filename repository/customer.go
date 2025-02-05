@@ -9,45 +9,54 @@ import (
 	"time"
 )
 
-type CustomerRepository struct {
+const queryTimeout = 20 * time.Second
+
+type CustomerRepository interface {
+	Create(ctx context.Context, customer *models.Customer) error
+	FindByID(ctx context.Context, id int) (*models.Customer, error)
+	UpdateCreditLimit(ctx context.Context, customer *models.Customer) error
+}
+
+type customerRepository struct {
 	dbCtx transactor.DBContext
 }
 
-func NewCustomerRepository(dbCtx transactor.DBContext) *CustomerRepository {
-	return &CustomerRepository{
-		dbCtx: dbCtx,
-	}
+// NewCustomerRepository returns the CustomerRepository interface implementation.
+func NewCustomerRepository(dbCtx transactor.DBContext) CustomerRepository {
+	return &customerRepository{dbCtx: dbCtx}
 }
 
-func (r *CustomerRepository) Create(ctx context.Context, customer *models.Customer) error {
+func (r *customerRepository) Create(ctx context.Context, customer *models.Customer) error {
 	query := `
-	INSERT INTO public.customers (
-			email, credit_limit
-	)
-	VALUES ($1, $2)
-	RETURNING *
+		INSERT INTO public.customers (email, credit_limit)
+		VALUES ($1, $2)
+		RETURNING id, email, credit_limit
 	`
 
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
-	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, customer.Email, customer.CreditLimit).StructScan(customer)
+
+	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, customer.Email, customer.CreditLimit).
+		Scan(&customer.ID, &customer.Email, &customer.CreditLimit)
 	if err != nil {
 		return fmt.Errorf("failed to create customer: %w", err)
 	}
+
 	return nil
 }
 
-func (r *CustomerRepository) FindByID(ctx context.Context, id int) (*models.Customer, error) {
+func (r *customerRepository) FindByID(ctx context.Context, id int) (*models.Customer, error) {
 	query := `
-	SELECT *
-	FROM public.customers
-	WHERE id = $1
-`
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		SELECT id, email, credit_limit 
+		FROM public.customers 
+		WHERE id = $1
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
 	var customer models.Customer
-	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, id).StructScan(&customer)
+	err := r.dbCtx(ctx).GetContext(ctx, &customer, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -58,19 +67,22 @@ func (r *CustomerRepository) FindByID(ctx context.Context, id int) (*models.Cust
 	return &customer, nil
 }
 
-func (r *CustomerRepository) UpdateCreditLimit(ctx context.Context, m *models.Customer) error {
+func (r *customerRepository) UpdateCreditLimit(ctx context.Context, customer *models.Customer) error {
 	query := `
-	UPDATE public.customers
-	SET credit_limit = $2
-	WHERE id = $1
-	RETURNING *
-`
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		UPDATE public.customers
+		SET credit_limit = $2
+		WHERE id = $1
+		RETURNING credit_limit
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, m.ID, m.CreditLimit).StructScan(m)
+	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, customer.ID, customer.CreditLimit).
+		Scan(&customer.CreditLimit)
 	if err != nil {
 		return fmt.Errorf("failed to update customer credit limit: %w", err)
 	}
+
 	return nil
 }
