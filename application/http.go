@@ -8,6 +8,7 @@ import (
 	"go-mma/handlers"
 	"go-mma/repository"
 	"go-mma/services"
+	"go-mma/util/transactor"
 	"log"
 	"net/http"
 
@@ -76,9 +77,10 @@ func registerRoutes(r *gin.Engine, dbCtx sqldb.DBContext) {
 
 	v1 := r.Group("/api/v1")
 
+	transactor, dbc := transactor.New(dbCtx.DB(), transactor.NestedTransactionsSavepoints)
 	rCustomer := v1.Group("/customers")
 	{
-		repo := repository.NewCustomerRepository(dbCtx)
+		repo := repository.NewCustomerRepository(dbc)
 		serv := services.NewCustomerService(repo)
 		hdl := handlers.NewCustomerHandler(serv)
 		rCustomer.POST("", hdl.CreateCustomer)
@@ -86,10 +88,10 @@ func registerRoutes(r *gin.Engine, dbCtx sqldb.DBContext) {
 
 	rOrder := v1.Group("/orders")
 	{
-		repoCust := repository.NewCustomerRepository(dbCtx)
-		repoOrder := repository.NewOrderRepository(dbCtx)
+		repoCust := repository.NewCustomerRepository(dbc)
+		repoOrder := repository.NewOrderRepository(dbc)
 		servNoti := services.NewNotificationService()
-		serv := services.NewOrderService(repoCust, repoOrder, servNoti)
+		serv := services.NewOrderService(transactor, repoCust, repoOrder, servNoti)
 		hdl := handlers.NewOrderHandler(serv)
 		rOrder.POST("", hdl.CreateOrder)
 		rOrder.DELETE("/:id", hdl.CancelOrder)

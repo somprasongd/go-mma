@@ -4,16 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"go-mma/data/sqldb"
 	"go-mma/models"
+	"go-mma/util/transactor"
 	"time"
 )
 
 type CustomerRepository struct {
-	dbCtx sqldb.DBContext
+	dbCtx transactor.DBContext
 }
 
-func NewCustomerRepository(dbCtx sqldb.DBContext) *CustomerRepository {
+func NewCustomerRepository(dbCtx transactor.DBContext) *CustomerRepository {
 	return &CustomerRepository{
 		dbCtx: dbCtx,
 	}
@@ -30,7 +30,7 @@ func (r *CustomerRepository) Create(ctx context.Context, customer *models.Custom
 
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
-	err := r.dbCtx.DB().QueryRowxContext(ctx, query, customer.Email, customer.CreditLimit).StructScan(customer)
+	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, customer.Email, customer.CreditLimit).StructScan(customer)
 	if err != nil {
 		return fmt.Errorf("failed to create customer: %w", err)
 	}
@@ -47,7 +47,7 @@ func (r *CustomerRepository) FindByID(ctx context.Context, id int) (*models.Cust
 	defer cancel()
 
 	var customer models.Customer
-	err := r.dbCtx.DB().QueryRowxContext(ctx, query, id).StructScan(&customer)
+	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, id).StructScan(&customer)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -68,7 +68,7 @@ func (r *CustomerRepository) UpdateCreditLimit(ctx context.Context, m *models.Cu
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
-	err := r.dbCtx.DB().QueryRowxContext(ctx, query, m.ID, m.CreditLimit).StructScan(m)
+	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, m.ID, m.CreditLimit).StructScan(m)
 	if err != nil {
 		return fmt.Errorf("failed to update customer credit limit: %w", err)
 	}
