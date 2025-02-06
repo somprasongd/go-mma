@@ -1,1 +1,1 @@
-drop table public.customers;
+DROP TABLE public.customers;

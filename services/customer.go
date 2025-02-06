@@ -5,6 +5,7 @@ import (
 	"go-mma/dtos"
 	"go-mma/models"
 	"go-mma/repository"
+	"go-mma/util/errs"
 	"log"
 )
 
@@ -22,10 +23,14 @@ func NewCustomerService(custRepo repository.CustomerRepository) CustomerService 
 	}
 }
 
+var (
+	ErrEmailExists = errs.NewDuplicateEntryError("email already exists")
+)
+
 func (s *customerService) CreateCustomer(ctx context.Context, req *dtos.CreateCustomerRequest) (int, error) {
 	// validate the request
 	if err := req.Validate(); err != nil {
-		return 0, err
+		return 0, errs.NewValidationError(err.Error())
 	}
 
 	// create model
@@ -34,6 +39,9 @@ func (s *customerService) CreateCustomer(ctx context.Context, req *dtos.CreateCu
 	// save to database
 	if err := s.custRepo.Create(ctx, customer); err != nil {
 		log.Println(err)
+		if errs.IsErrDuplicateEntry(err) {
+			return 0, ErrEmailExists
+		}
 		return 0, err
 	}
 	return customer.ID, nil

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go-mma/models"
+	"go-mma/util/errs"
 	"go-mma/util/transactor"
 	"time"
 )
@@ -39,7 +40,7 @@ func (r *customerRepository) Create(ctx context.Context, customer *models.Custom
 	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, customer.Email, customer.CreditLimit).
 		Scan(&customer.ID, &customer.Email, &customer.CreditLimit)
 	if err != nil {
-		return fmt.Errorf("failed to create customer: %w", err)
+		return errs.HandleDBError(err)
 	}
 
 	return nil
@@ -61,7 +62,7 @@ func (r *customerRepository) FindByID(ctx context.Context, id int) (*models.Cust
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to get customer by ID: %w", err)
+		return nil, errs.HandleDBError(fmt.Errorf("failed to get customer by ID: %w", err))
 	}
 
 	return &customer, nil
@@ -81,7 +82,7 @@ func (r *customerRepository) UpdateCreditLimit(ctx context.Context, customer *mo
 	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, customer.ID, customer.CreditLimit).
 		Scan(&customer.CreditLimit)
 	if err != nil {
-		return fmt.Errorf("failed to update customer credit limit: %w", err)
+		return errs.HandleDBError(fmt.Errorf("failed to update customer credit limit: %w", err))
 	}
 
 	return nil

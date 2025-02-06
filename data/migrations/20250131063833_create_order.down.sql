@@ -1,1 +1,1 @@
-drop table public.orders;
+DROP TABLE public.orders;

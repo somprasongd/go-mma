@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"go-mma/models"
+	"go-mma/util/errs"
 	"go-mma/util/transactor"
 	"time"
 )
@@ -39,7 +40,7 @@ func (r *orderRepository) Create(ctx context.Context, order *models.Order) error
 	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, order.CustomerID, order.OrderTotal).
 		Scan(&order.ID, &order.CustomerID, &order.OrderTotal, &order.CreatedAt)
 	if err != nil {
-		return fmt.Errorf("failed to create order: %w", err)
+		return errs.HandleDBError(fmt.Errorf("failed to create order: %w", err))
 	}
 	return nil
 }
@@ -60,7 +61,7 @@ func (r *orderRepository) FindByID(ctx context.Context, id int) (*models.Order, 
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("failed to get order by ID: %w", err)
+		return nil, errs.HandleDBError(fmt.Errorf("failed to get order by ID: %w", err))
 	}
 	return &order, nil
 }
@@ -79,7 +80,7 @@ func (r *orderRepository) Cancel(ctx context.Context, id int) error {
 	var canceledAt sql.NullTime
 	err := r.dbCtx(ctx).QueryRowxContext(ctx, query, id).Scan(&canceledAt)
 	if err != nil {
-		return fmt.Errorf("failed to cancel order: %w", err)
+		return errs.HandleDBError(fmt.Errorf("failed to cancel order: %w", err))
 	}
 
 	return nil

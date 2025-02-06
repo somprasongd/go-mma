@@ -3,6 +3,7 @@ package handlers
 import (
 	"go-mma/dtos"
 	"go-mma/services"
+	"go-mma/util/errs"
 	"net/http"
 	"strconv"
 
@@ -25,13 +26,13 @@ func NewOrderHandler(orderServ services.OrderService) OrderHandler {
 func (h *orderHandler) CreateOrder(c *gin.Context) {
 	payload := dtos.CreateOrderRequest{}
 	if err := c.BindJSON(&payload); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		handleError(c, errs.NewJSONParseError(err.Error()))
 		return
 	}
 
 	id, err := h.orderServ.CreateOrder(c.Request.Context(), &payload)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 
