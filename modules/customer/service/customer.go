@@ -1,10 +1,10 @@
-package services
+package service
 
 import (
 	"context"
-	"go-mma/dtos"
-	"go-mma/models"
-	"go-mma/repository"
+	"go-mma/modules/customer/dtos"
+	"go-mma/modules/customer/model"
+	"go-mma/modules/customer/repository"
 	"go-mma/util/errs"
 	"log"
 )
@@ -34,7 +34,7 @@ func (s *customerService) CreateCustomer(ctx context.Context, req *dtos.CreateCu
 	}
 
 	// create model
-	customer := models.NewCustomer(req.Email, req.CreditLimit)
+	customer := model.NewCustomer(req.Email, req.CreditLimit)
 
 	// save to database
 	if err := s.custRepo.Create(ctx, customer); err != nil {

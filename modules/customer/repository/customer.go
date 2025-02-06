@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"go-mma/models"
+	"go-mma/modules/customer/model"
 	"go-mma/util/errs"
 	"go-mma/util/transactor"
 	"time"
@@ -13,9 +13,9 @@ import (
 const queryTimeout = 20 * time.Second
 
 type CustomerRepository interface {
-	Create(ctx context.Context, customer *models.Customer) error
-	FindByID(ctx context.Context, id int) (*models.Customer, error)
-	UpdateCreditLimit(ctx context.Context, customer *models.Customer) error
+	Create(ctx context.Context, customer *model.Customer) error
+	FindByID(ctx context.Context, id int) (*model.Customer, error)
+	UpdateCreditLimit(ctx context.Context, customer *model.Customer) error
 }
 
 type customerRepository struct {
@@ -27,7 +27,7 @@ func NewCustomerRepository(dbCtx transactor.DBContext) CustomerRepository {
 	return &customerRepository{dbCtx: dbCtx}
 }
 
-func (r *customerRepository) Create(ctx context.Context, customer *models.Customer) error {
+func (r *customerRepository) Create(ctx context.Context, customer *model.Customer) error {
 	query := `
 		INSERT INTO public.customers (email, credit_limit)
 		VALUES ($1, $2)
@@ -46,7 +46,7 @@ func (r *customerRepository) Create(ctx context.Context, customer *models.Custom
 	return nil
 }
 
-func (r *customerRepository) FindByID(ctx context.Context, id int) (*models.Customer, error) {
+func (r *customerRepository) FindByID(ctx context.Context, id int) (*model.Customer, error) {
 	query := `
 		SELECT id, email, credit_limit 
 		FROM public.customers 
@@ -56,7 +56,7 @@ func (r *customerRepository) FindByID(ctx context.Context, id int) (*models.Cust
 	ctx, cancel := context.WithTimeout(ctx, queryTimeout)
 	defer cancel()
 
-	var customer models.Customer
+	var customer model.Customer
 	err := r.dbCtx(ctx).GetContext(ctx, &customer, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -68,7 +68,7 @@ func (r *customerRepository) FindByID(ctx context.Context, id int) (*models.Cust
 	return &customer, nil
 }
 
-func (r *customerRepository) UpdateCreditLimit(ctx context.Context, customer *models.Customer) error {
+func (r *customerRepository) UpdateCreditLimit(ctx context.Context, customer *model.Customer) error {
 	query := `
 		UPDATE public.customers
 		SET credit_limit = $2

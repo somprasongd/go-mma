@@ -3,6 +3,7 @@ package application
 import (
 	"go-mma/config"
 	"go-mma/data/sqldb"
+	"go-mma/modules"
 	"log"
 )
 
@@ -22,20 +23,22 @@ func New(config config.Config, db sqldb.DBContext) *Application {
 }
 
 func (app *Application) Run() error {
+	log.Printf("Starting server on port %d\n", app.config.HTTPPort)
 	app.httpServer.Start()
 
 	return nil
 }
 
-func (app *Application) RegisterRoutes() {
-	log.Printf("Starting server on port %d", app.config.HTTPPort)
-	registerRoutes(app.httpServer.Router(), app.db)
+func (app *Application) RegisterModules(modules []modules.Module) {
+	for _, module := range modules {
+		module.RegisterRoutes(app.httpServer.Router())
+	}
 }
 
 func (app *Application) Shutdown() error {
 	log.Println("Shutting down server")
 	if err := app.httpServer.Shutdown(); err != nil {
-		log.Printf("Server shutdown error: %v", err)
+		log.Printf("Server shutdown error: %v\n", err)
 	}
 	log.Println("Server stopped")
 	return nil

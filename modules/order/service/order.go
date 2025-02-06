@@ -1,13 +1,16 @@
-package services
+package service
 
 import (
 	"context"
-	"go-mma/dtos"
-	"go-mma/models"
-	"go-mma/repository"
+	"go-mma/modules/order/dtos"
+	"go-mma/modules/order/model"
+	"go-mma/modules/order/repository"
 	"go-mma/util/errs"
 	"go-mma/util/transactor"
 	"log"
+
+	custRepo "go-mma/modules/customer/repository"
+	notiServ "go-mma/modules/notification/service"
 )
 
 type OrderService interface {
@@ -17,12 +20,12 @@ type OrderService interface {
 
 type orderService struct {
 	transactor  transactor.Transactor
-	custRepo    repository.CustomerRepository
+	custRepo    custRepo.CustomerRepository
 	orderRepo   repository.OrderRepository
-	notiService NotificationService
+	notiService notiServ.NotificationService
 }
 
-func NewOrderService(transactor transactor.Transactor, custRepo repository.CustomerRepository, orderRepo repository.OrderRepository, notiService NotificationService) OrderService {
+func NewOrderService(transactor transactor.Transactor, custRepo custRepo.CustomerRepository, orderRepo repository.OrderRepository, notiService notiServ.NotificationService) OrderService {
 	return &orderService{
 		transactor:  transactor,
 		custRepo:    custRepo,
@@ -66,7 +69,7 @@ func (s *orderService) CreateOrder(ctx context.Context, req *dtos.CreateOrderReq
 			return errs.NewDatabaseFailureError(err.Error())
 		}
 
-		order := models.NewOrder(req.CustomerID, req.OrderTotal)
+		order := model.NewOrder(req.CustomerID, req.OrderTotal)
 		err = s.orderRepo.Create(ctx, order)
 		if err != nil {
 			log.Println(err)

@@ -11,4 +11,4 @@ content-type: application/json
 }
 
 ### Cancel Order
-DELETE {{host}}/{{base_url}}/1 HTTP/1.1
+DELETE {{host}}/{{base_url}}/11 HTTP/1.1

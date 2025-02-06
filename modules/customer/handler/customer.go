@@ -1,9 +1,10 @@
-package handlers
+package handler
 
 import (
-	"go-mma/dtos"
-	"go-mma/services"
+	"go-mma/modules/customer/dtos"
+	"go-mma/modules/customer/service"
 	"go-mma/util/errs"
+	"go-mma/util/response"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -14,24 +15,24 @@ type CustomerHandler interface {
 }
 
 type customerHandler struct {
-	custServ services.CustomerService
+	custServ service.CustomerService
 }
 
-func NewCustomerHandler(custServ services.CustomerService) CustomerHandler {
+func NewCustomerHandler(custServ service.CustomerService) CustomerHandler {
 	return &customerHandler{custServ: custServ}
 }
 
 func (h *customerHandler) CreateCustomer(c *gin.Context) {
 	payload := dtos.CreateCustomerRequest{}
 	if err := c.BindJSON(&payload); err != nil {
-		handleError(c, errs.NewJSONParseError(err.Error()))
+		response.HandleError(c, errs.NewJSONParseError(err.Error()))
 		return
 	}
 
 	id, err := h.custServ.CreateCustomer(c.Request.Context(), &payload)
 
 	if err != nil {
-		handleError(c, err)
+		response.HandleError(c, err)
 		return
 	}
 

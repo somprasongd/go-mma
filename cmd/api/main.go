@@ -4,6 +4,10 @@ import (
 	"go-mma/application"
 	"go-mma/config"
 	"go-mma/data/sqldb"
+	"go-mma/modules"
+	"go-mma/modules/customer"
+	"go-mma/modules/order"
+	"go-mma/util/transactor"
 	"log"
 	"os"
 	"os/signal"
@@ -26,8 +30,16 @@ func main() {
 		}
 	}()
 
+	transactor, dbCtx := transactor.New(db.DB(), transactor.NestedTransactionsSavepoints)
+
 	app := application.New(*config, db)
-	app.RegisterRoutes()
+
+	mCtx := modules.NewModuleContext(transactor, dbCtx)
+	app.RegisterModules([]modules.Module{
+		customer.NewModule(mCtx),
+		order.NewModule(mCtx),
+	})
+
 	app.Run()
 	// Handle graceful shutdown
 	stop := make(chan os.Signal, 1)

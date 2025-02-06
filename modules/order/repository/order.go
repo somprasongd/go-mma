@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"go-mma/models"
+	"go-mma/modules/order/model"
 	"go-mma/util/errs"
 	"go-mma/util/transactor"
 	"time"
@@ -13,8 +13,8 @@ import (
 const orderQueryTimeout = 20 * time.Second
 
 type OrderRepository interface {
-	Create(ctx context.Context, order *models.Order) error
-	FindByID(ctx context.Context, id int) (*models.Order, error)
+	Create(ctx context.Context, order *model.Order) error
+	FindByID(ctx context.Context, id int) (*model.Order, error)
 	Cancel(ctx context.Context, id int) error
 }
 
@@ -27,7 +27,7 @@ func NewOrderRepository(dbCtx transactor.DBContext) OrderRepository {
 	return &orderRepository{dbCtx: dbCtx}
 }
 
-func (r *orderRepository) Create(ctx context.Context, order *models.Order) error {
+func (r *orderRepository) Create(ctx context.Context, order *model.Order) error {
 	query := `
 		INSERT INTO public.orders (customer_id, order_total)
 		VALUES ($1, $2)
@@ -45,7 +45,7 @@ func (r *orderRepository) Create(ctx context.Context, order *models.Order) error
 	return nil
 }
 
-func (r *orderRepository) FindByID(ctx context.Context, id int) (*models.Order, error) {
+func (r *orderRepository) FindByID(ctx context.Context, id int) (*model.Order, error) {
 	query := `
 		SELECT id, customer_id, order_total, created_at, canceled_at
 		FROM public.orders
@@ -55,7 +55,7 @@ func (r *orderRepository) FindByID(ctx context.Context, id int) (*models.Order, 
 	ctx, cancel := context.WithTimeout(ctx, orderQueryTimeout)
 	defer cancel()
 
-	var order models.Order
+	var order model.Order
 	err := r.dbCtx(ctx).GetContext(ctx, &order, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {

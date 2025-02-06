@@ -1,9 +1,10 @@
-package handlers
+package handler
 
 import (
-	"go-mma/dtos"
-	"go-mma/services"
+	"go-mma/modules/order/dtos"
+	"go-mma/modules/order/service"
 	"go-mma/util/errs"
+	"go-mma/util/response"
 	"net/http"
 	"strconv"
 
@@ -16,23 +17,23 @@ type OrderHandler interface {
 }
 
 type orderHandler struct {
-	orderServ services.OrderService
+	orderServ service.OrderService
 }
 
-func NewOrderHandler(orderServ services.OrderService) OrderHandler {
+func NewOrderHandler(orderServ service.OrderService) OrderHandler {
 	return &orderHandler{orderServ: orderServ}
 }
 
 func (h *orderHandler) CreateOrder(c *gin.Context) {
 	payload := dtos.CreateOrderRequest{}
 	if err := c.BindJSON(&payload); err != nil {
-		handleError(c, errs.NewJSONParseError(err.Error()))
+		response.HandleError(c, errs.NewJSONParseError(err.Error()))
 		return
 	}
 
 	id, err := h.orderServ.CreateOrder(c.Request.Context(), &payload)
 	if err != nil {
-		handleError(c, err)
+		response.HandleError(c, err)
 		return
 	}
 
@@ -49,7 +50,7 @@ func (h *orderHandler) CancelOrder(c *gin.Context) {
 	}
 
 	if err := h.orderServ.CancelOrder(c.Request.Context(), orderID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response.HandleError(c, err)
 		return
 	}
 

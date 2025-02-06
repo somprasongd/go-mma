@@ -4,11 +4,6 @@ import (
 	"context"
 	"fmt"
 	"go-mma/config"
-	"go-mma/data/sqldb"
-	"go-mma/handlers"
-	"go-mma/repository"
-	"go-mma/services"
-	"go-mma/util/transactor"
 	"log"
 	"net/http"
 
@@ -65,35 +60,4 @@ func (s *httpServer) Shutdown() error {
 
 func (s *httpServer) Router() *gin.Engine {
 	return s.router
-}
-
-func registerRoutes(r *gin.Engine, dbCtx sqldb.DBContext) {
-	r.GET("/", func(c *gin.Context) {
-		// time.Sleep(10 * time.Second)
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello World",
-		})
-	})
-
-	v1 := r.Group("/api/v1")
-
-	transactor, dbc := transactor.New(dbCtx.DB(), transactor.NestedTransactionsSavepoints)
-	rCustomer := v1.Group("/customers")
-	{
-		repo := repository.NewCustomerRepository(dbc)
-		serv := services.NewCustomerService(repo)
-		hdl := handlers.NewCustomerHandler(serv)
-		rCustomer.POST("", hdl.CreateCustomer)
-	}
-
-	rOrder := v1.Group("/orders")
-	{
-		repoCust := repository.NewCustomerRepository(dbc)
-		repoOrder := repository.NewOrderRepository(dbc)
-		servNoti := services.NewNotificationService()
-		serv := services.NewOrderService(transactor, repoCust, repoOrder, servNoti)
-		hdl := handlers.NewOrderHandler(serv)
-		rOrder.POST("", hdl.CreateOrder)
-		rOrder.DELETE("/:id", hdl.CancelOrder)
-	}
 }

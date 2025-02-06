@@ -1,4 +1,4 @@
-package handlers
+package response
 
 import (
 	"go-mma/util/errs"
@@ -7,7 +7,7 @@ import (
 )
 
 // Centralized error handling
-func handleError(c *gin.Context, err error) {
+func HandleError(c *gin.Context, err error) {
 	// Convert non-AppError to AppError with type ErrOperationFailed
 	appErr, ok := err.(*errs.AppError)
 	if !ok {
