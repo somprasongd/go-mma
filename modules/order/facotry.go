@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	custRepo "go-mma/modules/customer/repository"
+	custServ "go-mma/modules/customer/service"
 	notiServ "go-mma/modules/notification/service"
 	"go-mma/modules/order/handler"
 	"go-mma/modules/order/repository"
@@ -21,10 +22,13 @@ type module struct {
 }
 
 func (m *module) RegisterRoutes(router *gin.Engine) {
-	repoCust := custRepo.NewCustomerRepository(m.mCtx.DBCtx)
-	repoOrder := repository.NewOrderRepository(m.mCtx.DBCtx)
 	servNoti := notiServ.NewNotificationService()
-	serv := service.NewOrderService(m.mCtx.Transactor, repoCust, repoOrder, servNoti)
+
+	custRepo := custRepo.NewCustomerRepository(m.mCtx.DBCtx)
+	servCust := custServ.NewCustomerService(custRepo)
+
+	repoOrder := repository.NewOrderRepository(m.mCtx.DBCtx)
+	serv := service.NewOrderService(m.mCtx.Transactor, servCust, repoOrder, servNoti)
 	hdl := handler.NewOrderHandler(serv)
 
 	rOrder := router.Group("/api/v1/orders")

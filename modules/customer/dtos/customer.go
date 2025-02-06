@@ -16,3 +16,9 @@ func (r *CreateCustomerRequest) Validate() error {
 	}
 	return nil
 }
+
+type Customer struct {
+	ID          int    `json:"id"`
+	Email       string `json:"email"`
+	CreditLimit int    `json:"credit_limit"`
+}

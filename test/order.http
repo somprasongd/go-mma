@@ -6,9 +6,9 @@ POST {{host}}/{{base_url}} HTTP/1.1
 content-type: application/json
 
 {
-    "customer_id": 1,
+    "customer_id": 12,
     "order_total": 10
 }
 
 ### Cancel Order
-DELETE {{host}}/{{base_url}}/11 HTTP/1.1
+DELETE {{host}}/{{base_url}}/13 HTTP/1.1

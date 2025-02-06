@@ -9,7 +9,7 @@ import (
 	"go-mma/util/transactor"
 	"log"
 
-	custRepo "go-mma/modules/customer/repository"
+	custServ "go-mma/modules/customer/service"
 	notiServ "go-mma/modules/notification/service"
 )
 
@@ -20,25 +20,22 @@ type OrderService interface {
 
 type orderService struct {
 	transactor  transactor.Transactor
-	custRepo    custRepo.CustomerRepository
+	custServ    custServ.CustomerService
 	orderRepo   repository.OrderRepository
 	notiService notiServ.NotificationService
 }
 
-func NewOrderService(transactor transactor.Transactor, custRepo custRepo.CustomerRepository, orderRepo repository.OrderRepository, notiService notiServ.NotificationService) OrderService {
+func NewOrderService(transactor transactor.Transactor, custServ custServ.CustomerService, orderRepo repository.OrderRepository, notiService notiServ.NotificationService) OrderService {
 	return &orderService{
 		transactor:  transactor,
-		custRepo:    custRepo,
+		custServ:    custServ,
 		orderRepo:   orderRepo,
 		notiService: notiService,
 	}
 }
 
 var (
-	ErrCustomerNotFound             = errs.NewResourceNotFoundError("the customer with given id was not found")
-	ErrOrderTotalExceedsCreditLimit = errs.NewBusinessLogicError("order total exceeds credit limit")
-	ErrOrderNotFound                = errs.NewResourceNotFoundError("the order with given id was not found")
-	ErrReleaseCreditFailed          = errs.NewBusinessLogicError("release credit failed")
+	ErrOrderNotFound = errs.NewResourceNotFoundError("the order with given id was not found")
 )
 
 func (s *orderService) CreateOrder(ctx context.Context, req *dtos.CreateOrderRequest) (int, error) {
@@ -49,24 +46,9 @@ func (s *orderService) CreateOrder(ctx context.Context, req *dtos.CreateOrderReq
 
 	var orderId int
 	err := s.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
-		customer, err := s.custRepo.FindByID(ctx, req.CustomerID)
+		err := s.custServ.ReserveCredit(ctx, req.CustomerID, req.OrderTotal)
 		if err != nil {
-			log.Println(err)
-			return errs.NewDatabaseFailureError(err.Error())
-		}
-
-		if customer == nil {
-			return ErrCustomerNotFound
-		}
-
-		if err := customer.ReserveCredit(req.OrderTotal); err != nil {
-			log.Println(err)
-			return ErrOrderTotalExceedsCreditLimit
-		}
-
-		if err := s.custRepo.UpdateCreditLimit(ctx, customer); err != nil {
-			log.Println(err)
-			return errs.NewDatabaseFailureError(err.Error())
+			return err
 		}
 
 		order := model.NewOrder(req.CustomerID, req.OrderTotal)
@@ -74,6 +56,11 @@ func (s *orderService) CreateOrder(ctx context.Context, req *dtos.CreateOrderReq
 		if err != nil {
 			log.Println(err)
 			return errs.NewDatabaseFailureError(err.Error())
+		}
+
+		customer, err := s.custServ.GetCustomerByID(ctx, req.CustomerID)
+		if err != nil {
+			return err
 		}
 
 		s.notiService.SendEmail(customer.Email, "Order Created", map[string]any{
@@ -93,35 +80,26 @@ func (s *orderService) CreateOrder(ctx context.Context, req *dtos.CreateOrderReq
 }
 
 func (s *orderService) CancelOrder(ctx context.Context, id int) error {
-	order, err := s.orderRepo.FindByID(ctx, id)
-	if err != nil {
-		log.Println(err)
-		return errs.NewDatabaseFailureError(err.Error())
-	}
+	return s.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
+		order, err := s.orderRepo.FindByID(ctx, id)
+		if err != nil {
+			log.Println(err)
+			return errs.NewDatabaseFailureError(err.Error())
+		}
 
-	if order == nil {
-		return ErrOrderNotFound
-	}
+		if order == nil {
+			return ErrOrderNotFound
+		}
 
-	if err := s.orderRepo.Cancel(ctx, order.ID); err != nil {
-		log.Println(err)
-		return errs.NewDatabaseFailureError(err.Error())
-	}
+		if err := s.orderRepo.Cancel(ctx, order.ID); err != nil {
+			log.Println(err)
+			return errs.NewDatabaseFailureError(err.Error())
+		}
 
-	customer, err := s.custRepo.FindByID(ctx, order.CustomerID)
-	if err != nil {
-		log.Println(err)
-		return ErrCustomerNotFound
-	}
-	if err := customer.ReleaseCredit(order.OrderTotal); err != nil {
-		log.Println(err)
-		return ErrReleaseCreditFailed
-	}
+		if err := s.custServ.ReleaseCredit(ctx, order.CustomerID, order.OrderTotal); err != nil {
+			return err
+		}
 
-	if err := s.custRepo.UpdateCreditLimit(ctx, customer); err != nil {
-		log.Println(err)
-		return errs.NewDatabaseFailureError(err.Error())
-	}
-
-	return nil
+		return nil
+	})
 }
