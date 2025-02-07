@@ -5,6 +5,7 @@ ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 
 .PHONY: run
 run:
+	cd src/app && \
 	go run cmd/api/main.go
 
 .PHONY: devup
