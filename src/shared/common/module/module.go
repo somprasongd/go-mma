@@ -1,12 +1,16 @@
 package module
 
 import (
+	"go-mma/shared/common/registry"
 	"go-mma/shared/common/storage/db/transactor"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Module interface {
+	// Init registers the module's services into the registry.
+	Init(reg registry.ServiceRegistry) error
+	// RegisterRoutes registers the module's routes to the Gin app.
 	RegisterRoutes(r *gin.Engine)
 }
 

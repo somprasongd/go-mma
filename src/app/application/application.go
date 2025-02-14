@@ -3,19 +3,22 @@ package application
 import (
 	"go-mma/config"
 	"go-mma/shared/common/module"
+	"go-mma/shared/common/registry"
 	"log"
 )
 
 type Application struct {
 	config config.Config
 
-	httpServer HTTPServer
+	httpServer      HTTPServer
+	serviceRegistry registry.ServiceRegistry
 }
 
 func New(config config.Config) *Application {
 	return &Application{
-		config:     config,
-		httpServer: newHTTPServer(config),
+		config:          config,
+		httpServer:      newHTTPServer(config),
+		serviceRegistry: registry.NewServiceRegistry(),
 	}
 }
 
@@ -28,6 +31,9 @@ func (app *Application) Run() error {
 
 func (app *Application) RegisterModules(modules []module.Module) {
 	for _, module := range modules {
+		if err := module.Init(app.serviceRegistry); err != nil {
+			log.Fatalf("module initialization error: %v", err)
+		}
 		module.RegisterRoutes(app.httpServer.Router())
 	}
 }

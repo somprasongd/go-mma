@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"go-mma/modules/customers"
+	"go-mma/modules/notifications"
 	"go-mma/modules/orders"
 	"go-mma/shared/common/module"
 	"go-mma/shared/common/storage/db"
@@ -34,6 +35,7 @@ func main() {
 
 	mCtx := module.NewModuleContext(transactor, dbCtx)
 	app.RegisterModules([]module.Module{
+		notifications.NewModule(mCtx),
 		customers.NewModule(mCtx),
 		orders.NewModule(mCtx),
 	})

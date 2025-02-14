@@ -14,6 +14,7 @@ require (
 	github.com/gin-contrib/cors v1.7.3
 	github.com/gin-gonic/gin v1.10.0
 	go-mma/modules/customers v0.0.0
+	go-mma/modules/notifications v0.0.0
 	go-mma/modules/orders v0.0.0
 	go-mma/shared/common v0.0.0
 )
@@ -41,7 +42,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
-	go-mma/modules/notifications v0.0.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/net v0.33.0 // indirect
