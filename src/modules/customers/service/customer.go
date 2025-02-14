@@ -2,25 +2,20 @@ package service
 
 import (
 	"context"
-	"go-mma/modules/customers/dtos"
+
 	"go-mma/modules/customers/model"
 	"go-mma/modules/customers/repository"
 	"go-mma/shared/common/errs"
 	"log"
-)
 
-type CustomerService interface {
-	CreateCustomer(ctx context.Context, req *dtos.CreateCustomerRequest) (int, error)
-	ReserveCredit(ctx context.Context, id int, amount int) error
-	ReleaseCredit(ctx context.Context, id int, amount int) error
-	GetCustomerByID(ctx context.Context, id int) (*dtos.Customer, error)
-}
+	customerContracts "go-mma/shared/contracts/customer_contracts"
+)
 
 type customerService struct {
 	custRepo repository.CustomerRepository
 }
 
-func NewCustomerService(custRepo repository.CustomerRepository) CustomerService {
+func NewCustomerService(custRepo repository.CustomerRepository) customerContracts.CustomerService {
 	return &customerService{
 		custRepo: custRepo,
 	}
@@ -33,7 +28,7 @@ var (
 	ErrReleaseCreditFailed          = errs.NewBusinessLogicError("release credit failed")
 )
 
-func (s *customerService) CreateCustomer(ctx context.Context, req *dtos.CreateCustomerRequest) (int, error) {
+func (s *customerService) CreateCustomer(ctx context.Context, req *customerContracts.CreateCustomerRequest) (int, error) {
 	// validate the request
 	if err := req.Validate(); err != nil {
 		return 0, errs.NewValidationError(err.Error())
@@ -53,7 +48,7 @@ func (s *customerService) CreateCustomer(ctx context.Context, req *dtos.CreateCu
 	return customer.ID, nil
 }
 
-func (s *customerService) GetCustomerByID(ctx context.Context, id int) (*dtos.Customer, error) {
+func (s *customerService) GetCustomerByID(ctx context.Context, id int) (*customerContracts.CustomerInfo, error) {
 	customer, err := s.custRepo.FindByID(ctx, id)
 	if err != nil {
 		log.Println(err)
@@ -64,7 +59,7 @@ func (s *customerService) GetCustomerByID(ctx context.Context, id int) (*dtos.Cu
 		return nil, ErrCustomerNotFound
 	}
 
-	return &dtos.Customer{
+	return &customerContracts.CustomerInfo{
 		ID:          customer.ID,
 		Email:       customer.Email,
 		CreditLimit: customer.CreditLimit,

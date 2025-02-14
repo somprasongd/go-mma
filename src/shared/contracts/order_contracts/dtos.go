@@ -1,4 +1,4 @@
-package dtos
+package ordercontracts
 
 import "fmt"
 

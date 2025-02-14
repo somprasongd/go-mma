@@ -1,23 +1,32 @@
 {
-  "folders": [
-	{
-		"path": "."
-	},
-	{
-		"path": "src/app"
-	},
-	{
-		"path": "src/modules/customers"
-	},
-	{
-		"path": "src/modules/orders"
-	},
-	{
-		"path": "src/modules/notifications"
-	},
-	{
-		"path": "src/shared/common"
-	}
-],
-  "settings": {}
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "src/app"
+		},
+		{
+			"path": "src/modules/customers"
+		},
+		{
+			"path": "src/modules/orders"
+		},
+		{
+			"path": "src/modules/notifications"
+		},
+		{
+			"path": "src/shared/common"
+		},
+		{
+			"path": "src/shared/contracts/customer_contracts"
+		},
+		{
+			"path": "src/shared/contracts/order_contracts"
+		},
+		{
+			"path": "src/shared/contracts/notification_contracts"
+		}
+	],
+	"settings": {}
 }

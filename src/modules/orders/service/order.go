@@ -4,28 +4,24 @@ import (
 	"context"
 	"log"
 
-	custServ "go-mma/modules/customers/service"
-	notiServ "go-mma/modules/notifications/service"
-	"go-mma/modules/orders/dtos"
 	"go-mma/modules/orders/model"
 	"go-mma/modules/orders/repository"
 	"go-mma/shared/common/errs"
 	"go-mma/shared/common/storage/db/transactor"
-)
 
-type OrderService interface {
-	CreateOrder(ctx context.Context, req *dtos.CreateOrderRequest) (int, error)
-	CancelOrder(ctx context.Context, id int) error
-}
+	customerContracts "go-mma/shared/contracts/customer_contracts"
+	notificationContracts "go-mma/shared/contracts/notification_contracts"
+	orderContracts "go-mma/shared/contracts/order_contracts"
+)
 
 type orderService struct {
 	transactor  transactor.Transactor
-	custServ    custServ.CustomerService
+	custServ    customerContracts.CustomerService
 	orderRepo   repository.OrderRepository
-	notiService notiServ.NotificationService
+	notiService notificationContracts.NotificationService
 }
 
-func NewOrderService(transactor transactor.Transactor, custServ custServ.CustomerService, orderRepo repository.OrderRepository, notiService notiServ.NotificationService) OrderService {
+func NewOrderService(transactor transactor.Transactor, custServ customerContracts.CustomerService, orderRepo repository.OrderRepository, notiService notificationContracts.NotificationService) orderContracts.OrderService {
 	return &orderService{
 		transactor:  transactor,
 		custServ:    custServ,
@@ -38,7 +34,7 @@ var (
 	ErrOrderNotFound = errs.NewResourceNotFoundError("the order with given id was not found")
 )
 
-func (s *orderService) CreateOrder(ctx context.Context, req *dtos.CreateOrderRequest) (int, error) {
+func (s *orderService) CreateOrder(ctx context.Context, req *orderContracts.CreateOrderRequest) (int, error) {
 	// validate request
 	if err := req.Validate(); err != nil {
 		return 0, errs.NewValidationError(err.Error())

@@ -4,6 +4,12 @@ go 1.23.5
 
 replace go-mma/shared/common v0.0.0 => ../shared/common
 
+replace go-mma/shared/contracts/order_contracts v0.0.0 => ../shared/contracts/order_contracts
+
+replace go-mma/shared/contracts/notification_contracts v0.0.0 => ../shared/contracts/notification_contracts
+
+replace go-mma/shared/contracts/customer_contracts v0.0.0 => ../shared/contracts/customer_contracts
+
 replace go-mma/modules/customers v0.0.0 => ../modules/customers
 
 replace go-mma/modules/orders v0.0.0 => ../modules/orders
@@ -42,6 +48,9 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.12 // indirect
+	go-mma/shared/contracts/customer_contracts v0.0.0 // indirect
+	go-mma/shared/contracts/notification_contracts v0.0.0 // indirect
+	go-mma/shared/contracts/order_contracts v0.0.0 // indirect
 	golang.org/x/arch v0.12.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/net v0.33.0 // indirect

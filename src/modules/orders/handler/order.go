@@ -1,14 +1,14 @@
 package handler
 
 import (
-	"go-mma/modules/orders/dtos"
-	"go-mma/modules/orders/service"
 	"go-mma/shared/common/errs"
 	"go-mma/shared/common/response"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+
+	orderContracts "go-mma/shared/contracts/order_contracts"
 )
 
 type OrderHandler interface {
@@ -17,15 +17,15 @@ type OrderHandler interface {
 }
 
 type orderHandler struct {
-	orderServ service.OrderService
+	orderServ orderContracts.OrderService
 }
 
-func NewOrderHandler(orderServ service.OrderService) OrderHandler {
+func NewOrderHandler(orderServ orderContracts.OrderService) OrderHandler {
 	return &orderHandler{orderServ: orderServ}
 }
 
 func (h *orderHandler) CreateOrder(c *gin.Context) {
-	payload := dtos.CreateOrderRequest{}
+	payload := orderContracts.CreateOrderRequest{}
 	if err := c.BindJSON(&payload); err != nil {
 		response.HandleError(c, errs.NewJSONParseError(err.Error()))
 		return

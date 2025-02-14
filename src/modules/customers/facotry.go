@@ -8,15 +8,13 @@ import (
 	"go-mma/shared/common/registry"
 
 	"github.com/gin-gonic/gin"
-)
 
-const (
-	CustomerServiceKey registry.ServiceKey = "CustomerService"
+	customerContracts "go-mma/shared/contracts/customer_contracts"
 )
 
 type mod struct {
 	mCtx    *module.ModuleContext
-	custSvc service.CustomerService
+	custSvc customerContracts.CustomerService
 }
 
 func NewModule(mCtx *module.ModuleContext) module.Module {
@@ -27,7 +25,7 @@ func (m *mod) Init(reg registry.ServiceRegistry) error {
 	repo := repository.NewCustomerRepository(m.mCtx.DBCtx)
 	m.custSvc = service.NewCustomerService(repo)
 
-	reg.Register(CustomerServiceKey, m.custSvc)
+	reg.Register(customerContracts.CustomerServiceKey, m.custSvc)
 
 	return nil
 }

@@ -6,22 +6,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	custModule "go-mma/modules/customers"
-	custService "go-mma/modules/customers/service"
-	notiModule "go-mma/modules/notifications"
-	notiService "go-mma/modules/notifications/service"
 	"go-mma/modules/orders/handler"
 	"go-mma/modules/orders/repository"
 	"go-mma/modules/orders/service"
-)
 
-const (
-	OrderServiceKey registry.ServiceKey = "OrderService"
+	customerContracts "go-mma/shared/contracts/customer_contracts"
+	notificationContracts "go-mma/shared/contracts/notification_contracts"
+	orderContracts "go-mma/shared/contracts/order_contracts"
 )
 
 type mod struct {
 	mCtx     *module.ModuleContext
-	orderSvc service.OrderService
+	orderSvc orderContracts.OrderService
 }
 
 func NewModule(mCtx *module.ModuleContext) module.Module {
@@ -30,13 +26,13 @@ func NewModule(mCtx *module.ModuleContext) module.Module {
 
 func (m *mod) Init(reg registry.ServiceRegistry) error {
 	// Resolve CustomerService from the registry
-	custSvc, err := registry.ResolveAs[custService.CustomerService](reg, custModule.CustomerServiceKey)
+	custSvc, err := registry.ResolveAs[customerContracts.CustomerService](reg, customerContracts.CustomerServiceKey)
 	if err != nil {
 		return err
 	}
 
 	// Resolve NotificationService from the registry
-	notiSvc, err := registry.ResolveAs[notiService.NotificationService](reg, notiModule.NotificationServiceKey)
+	notiSvc, err := registry.ResolveAs[notificationContracts.NotificationService](reg, notificationContracts.NotificationServiceKey)
 	if err != nil {
 		return err
 	}
@@ -44,7 +40,7 @@ func (m *mod) Init(reg registry.ServiceRegistry) error {
 	repo := repository.NewOrderRepository(m.mCtx.DBCtx)
 	m.orderSvc = service.NewOrderService(m.mCtx.Transactor, custSvc, repo, notiSvc)
 
-	reg.Register(OrderServiceKey, m.orderSvc)
+	reg.Register(orderContracts.OrderServiceKey, m.orderSvc)
 	return nil
 }
 
