@@ -11,11 +11,16 @@ import (
 	customerContracts "go-mma/shared/contracts/customer_contracts"
 )
 
+type CustomerService interface {
+	customerContracts.CustomerFactory
+	customerContracts.CreditManagement
+}
+
 type customerService struct {
 	custRepo repository.CustomerRepository
 }
 
-func NewCustomerService(custRepo repository.CustomerRepository) customerContracts.CustomerService {
+func NewCustomerService(custRepo repository.CustomerRepository) CustomerService {
 	return &customerService{
 		custRepo: custRepo,
 	}

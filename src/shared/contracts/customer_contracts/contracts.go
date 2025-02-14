@@ -9,9 +9,17 @@ const (
 	CustomerServiceKey registry.ServiceKey = "CustomerService"
 )
 
-type CustomerService interface {
+type CustomerCommon interface {
+	GetCustomerByID(ctx context.Context, id int) (*CustomerInfo, error)
+}
+
+type CustomerFactory interface {
 	CreateCustomer(ctx context.Context, req *CreateCustomerRequest) (int, error)
+	CustomerCommon
+}
+
+type CreditManagement interface {
 	ReserveCredit(ctx context.Context, id int, amount int) error
 	ReleaseCredit(ctx context.Context, id int, amount int) error
-	GetCustomerByID(ctx context.Context, id int) (*CustomerInfo, error)
+	CustomerCommon
 }

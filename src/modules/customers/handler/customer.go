@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"go-mma/modules/customers/service"
 	"go-mma/shared/common/errs"
 	"go-mma/shared/common/response"
 	"net/http"
@@ -15,10 +16,10 @@ type CustomerHandler interface {
 }
 
 type customerHandler struct {
-	custServ customerContracts.CustomerService
+	custServ service.CustomerService
 }
 
-func NewCustomerHandler(custServ customerContracts.CustomerService) CustomerHandler {
+func NewCustomerHandler(custServ service.CustomerService) CustomerHandler {
 	return &customerHandler{custServ: custServ}
 }
 

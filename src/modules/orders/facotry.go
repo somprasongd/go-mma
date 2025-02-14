@@ -26,7 +26,7 @@ func NewModule(mCtx *module.ModuleContext) module.Module {
 
 func (m *mod) Init(reg registry.ServiceRegistry) error {
 	// Resolve CustomerService from the registry
-	custSvc, err := registry.ResolveAs[customerContracts.CustomerService](reg, customerContracts.CustomerServiceKey)
+	custSvc, err := registry.ResolveAs[customerContracts.CreditManagement](reg, customerContracts.CustomerServiceKey)
 	if err != nil {
 		return err
 	}

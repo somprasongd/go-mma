@@ -16,12 +16,12 @@ import (
 
 type orderService struct {
 	transactor  transactor.Transactor
-	custServ    customerContracts.CustomerService
+	custServ    customerContracts.CreditManagement
 	orderRepo   repository.OrderRepository
 	notiService notificationContracts.NotificationService
 }
 
-func NewOrderService(transactor transactor.Transactor, custServ customerContracts.CustomerService, orderRepo repository.OrderRepository, notiService notificationContracts.NotificationService) orderContracts.OrderService {
+func NewOrderService(transactor transactor.Transactor, custServ customerContracts.CreditManagement, orderRepo repository.OrderRepository, notiService notificationContracts.NotificationService) orderContracts.OrderService {
 	return &orderService{
 		transactor:  transactor,
 		custServ:    custServ,

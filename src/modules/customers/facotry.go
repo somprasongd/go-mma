@@ -14,7 +14,7 @@ import (
 
 type mod struct {
 	mCtx    *module.ModuleContext
-	custSvc customerContracts.CustomerService
+	custSvc service.CustomerService
 }
 
 func NewModule(mCtx *module.ModuleContext) module.Module {
