@@ -2,14 +2,15 @@ package service
 
 import (
 	"log"
-
-	notificationsContracts "go-mma/shared/contracts/notification_contracts"
 )
 
+type NotificationService interface {
+	SendEmail(to string, subject string, payload map[string]any) error
+}
 type notificationService struct {
 }
 
-func NewNotificationService() notificationsContracts.NotificationService {
+func NewNotificationService() NotificationService {
 	return &notificationService{}
 }
 

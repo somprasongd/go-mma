@@ -25,7 +25,7 @@
 			"path": "src/shared/contracts/order_contracts"
 		},
 		{
-			"path": "src/shared/contracts/notification_contracts"
+			"path": "src/shared/messaging"
 		}
 	],
 	"settings": {}

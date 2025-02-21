@@ -4,6 +4,7 @@ import (
 	"go-mma/modules/customers/handler"
 	"go-mma/modules/customers/repository"
 	"go-mma/modules/customers/service"
+	"go-mma/shared/common/eventbus"
 	"go-mma/shared/common/module"
 	"go-mma/shared/common/registry"
 
@@ -21,7 +22,7 @@ func NewModule(mCtx *module.ModuleContext) module.Module {
 	return &mod{mCtx: mCtx}
 }
 
-func (m *mod) Init(reg registry.ServiceRegistry) error {
+func (m *mod) Init(reg registry.ServiceRegistry, eventbus eventbus.EventBus) error {
 	repo := repository.NewCustomerRepository(m.mCtx.DBCtx)
 	m.custSvc = service.NewCustomerService(repo)
 

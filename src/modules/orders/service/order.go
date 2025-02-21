@@ -7,26 +7,27 @@ import (
 	"go-mma/modules/orders/model"
 	"go-mma/modules/orders/repository"
 	"go-mma/shared/common/errs"
+	"go-mma/shared/common/eventbus"
 	"go-mma/shared/common/storage/db/transactor"
+	"go-mma/shared/messaging"
 
 	customerContracts "go-mma/shared/contracts/customer_contracts"
-	notificationContracts "go-mma/shared/contracts/notification_contracts"
 	orderContracts "go-mma/shared/contracts/order_contracts"
 )
 
 type orderService struct {
-	transactor  transactor.Transactor
-	custServ    customerContracts.CreditManagement
-	orderRepo   repository.OrderRepository
-	notiService notificationContracts.NotificationService
+	transactor transactor.Transactor
+	custServ   customerContracts.CreditManagement
+	orderRepo  repository.OrderRepository
+	eventbus   eventbus.EventBus
 }
 
-func NewOrderService(transactor transactor.Transactor, custServ customerContracts.CreditManagement, orderRepo repository.OrderRepository, notiService notificationContracts.NotificationService) orderContracts.OrderService {
+func NewOrderService(transactor transactor.Transactor, custServ customerContracts.CreditManagement, orderRepo repository.OrderRepository, eventbus eventbus.EventBus) orderContracts.OrderService {
 	return &orderService{
-		transactor:  transactor,
-		custServ:    custServ,
-		orderRepo:   orderRepo,
-		notiService: notiService,
+		transactor: transactor,
+		custServ:   custServ,
+		orderRepo:  orderRepo,
+		eventbus:   eventbus,
 	}
 }
 
@@ -41,6 +42,7 @@ func (s *orderService) CreateOrder(ctx context.Context, req *orderContracts.Crea
 	}
 
 	var orderId int
+	var orderCreatedIntegrationEvent *messaging.OrderCreatedIntegrationEvent
 	err := s.transactor.WithinTransaction(ctx, func(ctx context.Context) error {
 		err := s.custServ.ReserveCredit(ctx, req.CustomerID, req.OrderTotal)
 		if err != nil {
@@ -59,10 +61,12 @@ func (s *orderService) CreateOrder(ctx context.Context, req *orderContracts.Crea
 			return err
 		}
 
-		s.notiService.SendEmail(customer.Email, "Order Created", map[string]any{
-			"order_id": order.ID,
-			"total":    order.OrderTotal,
-		})
+		orderCreatedIntegrationEvent = messaging.NewOrderCreatedIntegrationEvent(
+			order.ID,
+			order.CustomerID,
+			order.OrderTotal,
+			customer.Email,
+		)
 
 		orderId = order.ID
 		return nil
@@ -71,6 +75,9 @@ func (s *orderService) CreateOrder(ctx context.Context, req *orderContracts.Crea
 	if err != nil {
 		return 0, err
 	}
+
+	// Publish the event
+	s.eventbus.Publish(ctx, orderCreatedIntegrationEvent)
 
 	return orderId, nil
 }

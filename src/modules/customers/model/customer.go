@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"go-mma/shared/common/ddd"
 	"time"
 )
 
@@ -11,6 +12,7 @@ type Customer struct {
 	CreditLimit int       `db:"credit_limit"`
 	CreatedAt   time.Time `db:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at"`
+	ddd.Aggregate[int]
 }
 
 func NewCustomer(email string, creditLimit int) *Customer {

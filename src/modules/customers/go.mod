@@ -4,6 +4,8 @@ go 1.23.5
 
 replace go-mma/shared/common v0.0.0 => ../../shared/common
 
+replace go-mma/shared/messaging v0.0.0 => ../../shared/messaging
+
 replace go-mma/shared/contracts/customer_contracts v0.0.0 => ../../shared/contracts/customer_contracts
 
 require (
