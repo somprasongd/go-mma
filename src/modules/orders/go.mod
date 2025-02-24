@@ -6,15 +6,12 @@ replace go-mma/shared/common v0.0.0 => ../../shared/common
 
 replace go-mma/shared/messaging v0.0.0 => ../../shared/messaging
 
-replace go-mma/shared/contracts/order_contracts v0.0.0 => ../../shared/contracts/order_contracts
-
 replace go-mma/shared/contracts/customer_contracts v0.0.0 => ../../shared/contracts/customer_contracts
 
 require (
 	github.com/gin-gonic/gin v1.10.0
 	go-mma/shared/common v0.0.0
 	go-mma/shared/contracts/customer_contracts v0.0.0
-	go-mma/shared/contracts/order_contracts v0.0.0
 	go-mma/shared/messaging v0.0.0
 )
 

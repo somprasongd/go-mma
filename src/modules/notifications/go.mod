@@ -6,12 +6,9 @@ replace go-mma/shared/common v0.0.0 => ../../shared/common
 
 replace go-mma/shared/messaging v0.0.0 => ../../shared/messaging
 
-replace go-mma/shared/contracts/notification_contracts v0.0.0 => ../../shared/contracts/notification_contracts
-
 require (
 	github.com/gin-gonic/gin v1.10.0
 	go-mma/shared/common v0.0.0
-	go-mma/shared/contracts/notification_contracts v0.0.0
 	go-mma/shared/messaging v0.0.0
 )
 

@@ -2,8 +2,9 @@ package notifications
 
 import (
 	eventhandlers "go-mma/modules/notifications/event_handlers"
-	"go-mma/modules/notifications/service"
+	"go-mma/modules/notifications/features"
 	"go-mma/shared/common/eventbus"
+	"go-mma/shared/common/mediator"
 	"go-mma/shared/common/module"
 	"go-mma/shared/common/registry"
 	"go-mma/shared/messaging"
@@ -12,8 +13,7 @@ import (
 )
 
 type mod struct {
-	mCtx    *module.ModuleContext
-	notiSvc service.NotificationService
+	mCtx *module.ModuleContext
 }
 
 func NewModule(mCtx *module.ModuleContext) module.Module {
@@ -21,9 +21,9 @@ func NewModule(mCtx *module.ModuleContext) module.Module {
 }
 
 func (m *mod) Init(reg registry.ServiceRegistry, eventbus eventbus.EventBus) error {
-	m.notiSvc = service.NewNotificationService()
+	mediator.Register[*features.SendEmailCommand, *mediator.NoResponse](features.NewSendEmailHandler())
 
-	eventbus.Subscribe(messaging.OrderCreatedIntegrationEventName, eventhandlers.NewOrderCreatedIntegrationEventHandler(m.notiSvc))
+	eventbus.Subscribe(messaging.OrderCreatedIntegrationEventName, eventhandlers.NewOrderCreatedIntegrationEventHandler())
 
 	return nil
 }

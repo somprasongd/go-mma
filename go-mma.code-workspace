@@ -10,6 +10,9 @@
 			"path": "src/modules/customers"
 		},
 		{
+			"path": "src/shared/contracts/customer_contracts"
+		},
+		{
 			"path": "src/modules/orders"
 		},
 		{
@@ -17,12 +20,6 @@
 		},
 		{
 			"path": "src/shared/common"
-		},
-		{
-			"path": "src/shared/contracts/customer_contracts"
-		},
-		{
-			"path": "src/shared/contracts/order_contracts"
 		},
 		{
 			"path": "src/shared/messaging"

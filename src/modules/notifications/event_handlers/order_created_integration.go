@@ -3,19 +3,17 @@ package eventhandlers
 import (
 	"context"
 	"errors"
-	"go-mma/modules/notifications/service"
+	"go-mma/modules/notifications/features"
 	"go-mma/shared/common/eventbus"
+	"go-mma/shared/common/mediator"
 	"go-mma/shared/messaging"
 )
 
 type orderCreatedIntegrationEventHandler struct {
-	svc service.NotificationService
 }
 
-func NewOrderCreatedIntegrationEventHandler(svc service.NotificationService) *orderCreatedIntegrationEventHandler {
-	return &orderCreatedIntegrationEventHandler{
-		svc: svc,
-	}
+func NewOrderCreatedIntegrationEventHandler() *orderCreatedIntegrationEventHandler {
+	return &orderCreatedIntegrationEventHandler{}
 }
 
 func (h *orderCreatedIntegrationEventHandler) Handle(ctx context.Context, event eventbus.Event) error {
@@ -25,14 +23,18 @@ func (h *orderCreatedIntegrationEventHandler) Handle(ctx context.Context, event 
 		return errors.New("Invalid event type: OrderCreatedIntegrationEvent")
 	}
 
-	to := "customer@example.com"
+	to := odrCreatedEvent.Email
 	subject := "Order Created Notification"
 	payload := map[string]any{
 		"orderId": odrCreatedEvent.ID,
 		"amount":  odrCreatedEvent.OrderTotal,
 	}
 
-	h.svc.SendEmail(to, subject, payload)
+	mediator.Send[*features.SendEmailCommand, *mediator.NoResponse](ctx, &features.SendEmailCommand{
+		To:      to,
+		Subject: subject,
+		Payload: payload,
+	})
 
 	return nil
 }

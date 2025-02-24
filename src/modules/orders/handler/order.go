@@ -1,14 +1,15 @@
 package handler
 
 import (
+	"go-mma/modules/orders/dtos"
+	"go-mma/modules/orders/features"
 	"go-mma/shared/common/errs"
+	"go-mma/shared/common/mediator"
 	"go-mma/shared/common/response"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-
-	orderContracts "go-mma/shared/contracts/order_contracts"
 )
 
 type OrderHandler interface {
@@ -17,28 +18,31 @@ type OrderHandler interface {
 }
 
 type orderHandler struct {
-	orderServ orderContracts.OrderService
 }
 
-func NewOrderHandler(orderServ orderContracts.OrderService) OrderHandler {
-	return &orderHandler{orderServ: orderServ}
+func NewOrderHandler() OrderHandler {
+	return &orderHandler{}
 }
 
 func (h *orderHandler) CreateOrder(c *gin.Context) {
-	payload := orderContracts.CreateOrderRequest{}
+	payload := dtos.CreateOrderRequest{}
 	if err := c.BindJSON(&payload); err != nil {
 		response.HandleError(c, errs.NewJSONParseError(err.Error()))
 		return
 	}
 
-	id, err := h.orderServ.CreateOrder(c.Request.Context(), &payload)
+	result, err := mediator.Send[*features.CreateOrderCommand, *features.CreateOrderResult](
+		c.Request.Context(),
+		&features.CreateOrderCommand{CreateOrderRequest: &payload},
+	)
+
 	if err != nil {
 		response.HandleError(c, err)
 		return
 	}
 
 	// Return a success response
-	c.JSON(http.StatusCreated, gin.H{"id": id})
+	c.JSON(http.StatusCreated, result.CreateOrderResponse)
 }
 
 func (h *orderHandler) CancelOrder(c *gin.Context) {
@@ -49,7 +53,12 @@ func (h *orderHandler) CancelOrder(c *gin.Context) {
 		return
 	}
 
-	if err := h.orderServ.CancelOrder(c.Request.Context(), orderID); err != nil {
+	_, err = mediator.Send[*features.CancelOrderCommand, *mediator.NoResponse](
+		c.Request.Context(),
+		&features.CancelOrderCommand{ID: orderID},
+	)
+
+	if err != nil {
 		response.HandleError(c, err)
 		return
 	}

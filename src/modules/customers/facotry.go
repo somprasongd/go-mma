@@ -1,21 +1,19 @@
 package customers
 
 import (
+	"go-mma/modules/customers/features"
 	"go-mma/modules/customers/handler"
 	"go-mma/modules/customers/repository"
-	"go-mma/modules/customers/service"
 	"go-mma/shared/common/eventbus"
+	"go-mma/shared/common/mediator"
 	"go-mma/shared/common/module"
 	"go-mma/shared/common/registry"
 
 	"github.com/gin-gonic/gin"
-
-	customerContracts "go-mma/shared/contracts/customer_contracts"
 )
 
 type mod struct {
-	mCtx    *module.ModuleContext
-	custSvc service.CustomerService
+	mCtx *module.ModuleContext
 }
 
 func NewModule(mCtx *module.ModuleContext) module.Module {
@@ -24,15 +22,17 @@ func NewModule(mCtx *module.ModuleContext) module.Module {
 
 func (m *mod) Init(reg registry.ServiceRegistry, eventbus eventbus.EventBus) error {
 	repo := repository.NewCustomerRepository(m.mCtx.DBCtx)
-	m.custSvc = service.NewCustomerService(repo)
 
-	reg.Register(customerContracts.CustomerServiceKey, m.custSvc)
+	mediator.Register(features.NewCreateCustomerHandler(repo))
+	mediator.Register(features.NewGetCustomerByIDQuery(repo))
+	mediator.Register(features.NewReserveCreditHandler(repo))
+	mediator.Register(features.NewReleaseCreditHandler(repo))
 
 	return nil
 }
 
 func (m *mod) RegisterRoutes(router *gin.Engine) {
-	hdl := handler.NewCustomerHandler(m.custSvc)
+	hdl := handler.NewCustomerHandler()
 
 	rCustomer := router.Group("/api/v1/customers")
 	{
