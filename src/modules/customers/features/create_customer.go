@@ -50,7 +50,7 @@ func (h *createCustomerHandler) Handle(ctx context.Context, cmd *CreateCustomerC
 		if errs.IsErrDuplicateEntry(err) {
 			return nil, exceptions.ErrEmailExists
 		}
-		return nil, err
+		return nil, err // Already wrapped in the repository
 	}
 	return newCreateCustomerResponse(customer.ID), nil
 }

@@ -108,41 +108,41 @@ func HandleDBError(err error) error {
 	return NewAppError(ErrDatabaseFailure, "database error", err, nil)
 }
 
-func IsAppError(err error) bool {
-	if err == nil {
-		return false
-	}
-	_, ok := err.(*AppError)
-	return ok
-}
+// func IsAppError(err error) bool {
+// 	if err == nil {
+// 		return false
+// 	}
+// 	_, ok := err.(*AppError)
+// 	return ok
+// }
 
-func IsErrValidation(err error) bool {
-	if err == nil {
-		return false
-	}
-	return ErrValidation == GetErrorType(err)
-}
+// func IsErrValidation(err error) bool {
+// 	if err == nil {
+// 		return false
+// 	}
+// 	return ErrValidation == GetErrorType(err)
+// }
 
-func IsErrAuthentication(err error) bool {
-	if err == nil {
-		return false
-	}
-	return ErrAuthentication == GetErrorType(err)
-}
+// func IsErrAuthentication(err error) bool {
+// 	if err == nil {
+// 		return false
+// 	}
+// 	return ErrAuthentication == GetErrorType(err)
+// }
 
-func IsErrAuthorization(err error) bool {
-	if err == nil {
-		return false
-	}
-	return ErrAuthorization == GetErrorType(err)
-}
+// func IsErrAuthorization(err error) bool {
+// 	if err == nil {
+// 		return false
+// 	}
+// 	return ErrAuthorization == GetErrorType(err)
+// }
 
-func IsErrResourceNotFound(err error) bool {
-	if err == nil {
-		return false
-	}
-	return ErrResourceNotFound == GetErrorType(err)
-}
+// func IsErrResourceNotFound(err error) bool {
+// 	if err == nil {
+// 		return false
+// 	}
+// 	return ErrResourceNotFound == GetErrorType(err)
+// }
 
 func IsErrDuplicateEntry(err error) bool {
 	if err == nil {
@@ -151,36 +151,36 @@ func IsErrDuplicateEntry(err error) bool {
 	return ErrDuplicateEntry == GetErrorType(err)
 }
 
-func IsErrDataIntegrity(err error) bool {
-	if err == nil {
-		return false
-	}
-	return ErrDataIntegrity == GetErrorType(err)
-}
+// func IsErrDataIntegrity(err error) bool {
+// 	if err == nil {
+// 		return false
+// 	}
+// 	return ErrDataIntegrity == GetErrorType(err)
+// }
 
-func IsErrDatabaseFailure(err error) bool {
-	if err == nil {
-		return false
-	}
-	return ErrDatabaseFailure == GetErrorType(err)
-}
-func IsErrServiceDependency(err error) bool {
-	if err == nil {
-		return false
-	}
-	return ErrServiceDependency == GetErrorType(err)
-}
+// func IsErrDatabaseFailure(err error) bool {
+// 	if err == nil {
+// 		return false
+// 	}
+// 	return ErrDatabaseFailure == GetErrorType(err)
+// }
+// func IsErrServiceDependency(err error) bool {
+// 	if err == nil {
+// 		return false
+// 	}
+// 	return ErrServiceDependency == GetErrorType(err)
+// }
 
-func IsErrBusinessLogic(err error) bool {
-	if err == nil {
-		return false
-	}
-	return ErrBusinessLogic == GetErrorType(err)
-}
+// func IsErrBusinessLogic(err error) bool {
+// 	if err == nil {
+// 		return false
+// 	}
+// 	return ErrBusinessLogic == GetErrorType(err)
+// }
 
-func IsErrOperationFailed(err error) bool {
-	if err == nil {
-		return false
-	}
-	return ErrOperationFailed == GetErrorType(err)
-}
+// func IsErrOperationFailed(err error) bool {
+// 	if err == nil {
+// 		return false
+// 	}
+// 	return ErrOperationFailed == GetErrorType(err)
+// }
