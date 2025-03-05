@@ -25,7 +25,7 @@ func NewCustomerHandler() CustomerHandler {
 func (h *customerHandler) CreateCustomer(c *gin.Context) {
 	payload := dtos.CreateCustomerRequest{}
 	if err := c.BindJSON(&payload); err != nil {
-		response.HandleError(c, errs.NewJSONParseError(err.Error()))
+		response.HandleError(c, errs.NewInvalidRequestError(err.Error()))
 		return
 	}
 

@@ -6,15 +6,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type ErrorResponse struct {
+	ErrorType    errs.ErrorType `json:"error_type"`
+	ErrorMessage string         `json:"error_message"`
+	Context      map[string]any `json:"context,omitempty"`
+}
+
 // Centralized error handling
 func HandleError(c *gin.Context, err error) {
 	// Convert non-AppError to AppError with type ErrOperationFailed
 	appErr, ok := err.(*errs.AppError)
 	if !ok {
-		appErr = &errs.AppError{
-			Type:    errs.ErrOperationFailed,
-			Message: err.Error(),
-		}
+		appErr = errs.NewAppError(errs.ErrOperationFailed, "internal error occurred", err, nil)
 		err = appErr
 	}
 
@@ -22,8 +25,9 @@ func HandleError(c *gin.Context, err error) {
 	statusCode := errs.GetHTTPStatus(err)
 
 	// Return structured response with error type and message
-	c.JSON(statusCode, gin.H{
-		"type":    appErr.Type,
-		"message": appErr.Message,
+	c.JSON(statusCode, ErrorResponse{
+		ErrorType:    appErr.Type,
+		ErrorMessage: appErr.Message,
+		Context:      appErr.Context,
 	})
 }

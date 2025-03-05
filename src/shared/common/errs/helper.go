@@ -2,8 +2,8 @@ package errs
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
+	"regexp"
 
 	"github.com/lib/pq"
 )
@@ -20,59 +20,100 @@ func GetErrorType(err error) ErrorType {
 // Map error type to HTTP status code
 func GetHTTPStatus(err error) int {
 	switch GetErrorType(err) {
-	case ErrJSONParse:
-		// JSON parse errors result in 400 (Bad Request)
-		return http.StatusBadRequest
+	case ErrInvalidRequest:
+		// 400 Bad Request: JSON parsing errors, invalid input format
+		return http.StatusBadRequest // 400
 	case ErrValidation:
-		// 422 Unprocessable Entity: Validation error (e.g., invalid data format)
+		// 422 Unprocessable Entity: Valid request but fails business rules
 		return http.StatusUnprocessableEntity // 422
 	case ErrAuthentication:
-		// 401 Unauthorized: Authentication required, wrong credentials
+		// 401 Unauthorized: Authentication failure
 		return http.StatusUnauthorized // 401
 	case ErrAuthorization:
-		// 403 Forbidden: The user doesn't have permission
+		// 403 Forbidden: No permission to access resource
 		return http.StatusForbidden // 403
 	case ErrResourceNotFound:
-		// 404 Not Found: The requested resource doesn't exist
+		// 404 Not Found: Missing or deleted entity
 		return http.StatusNotFound // 404
 	case ErrDuplicateEntry:
-		// 409 Conflict: Resource already exists
+		// 409 Conflict: Resource already exists (e.g., unique violation)
 		return http.StatusConflict // 409
+	case ErrBusinessLogic:
+		// 422 Unprocessable Entity: Failed logical validation (e.g., insufficient funds)
+		return http.StatusUnprocessableEntity // 422
 	case ErrDataIntegrity, ErrDatabaseFailure:
-		// 500 Internal Server Error: Database issues, constraint violations
+		// 500 Internal Server Error: Database-related issues
 		return http.StatusInternalServerError // 500
 	case ErrServiceDependency:
 		// 503 Service Unavailable: External service failure
 		return http.StatusServiceUnavailable // 503
-	case ErrBusinessLogic:
-		// 400 Bad Request: Business logic issues (e.g., invalid state)
-		return http.StatusBadRequest // 400
 	case ErrOperationFailed:
-		// 500 Internal Server Error: General failure case
+		// 500 Internal Server Error: Catch-all for other failures
 		return http.StatusInternalServerError // 500
 	default:
-		// Default: Unknown errors, fallback to internal server error
+		// 500 Internal Server Error: Unknown errors
 		return http.StatusInternalServerError // 500
 	}
 }
 
 // HandleDBError maps PostgreSQL errors to custom application errors
 func HandleDBError(err error) error {
-	fmt.Println(errors.Unwrap(err))
 	if pgErr, ok := err.(*pq.Error); ok {
 		switch pgErr.Code {
-		case "23505": // Unique constraint violation
-			return NewAppError(ErrDuplicateEntry, "duplicate entry detected: "+pgErr.Message)
+		case "23505": // Unique violation
+			// Attempt to parse the field name and value from the error message
+			re := regexp.MustCompile(`key \((.*?)\)=\((.*?)\) already exists`)
+			matches := re.FindStringSubmatch(pgErr.Message)
+			if len(matches) > 0 {
+				return NewAppError(ErrDuplicateEntry, "duplicate entry violation", err, map[string]interface{}{
+					"field": matches[1],
+					"value": matches[2],
+				})
+			}
+			// Fallback if parsing fails
+			return NewAppError(ErrDuplicateEntry, "duplicate entry violation", err, nil)
 		case "23503": // Foreign key violation
-			return NewAppError(ErrDataIntegrity, "foreign key constraint violation: "+pgErr.Message)
-		case "23502": // Not null violation
-			return NewAppError(ErrDataIntegrity, "not null constraint violation: "+pgErr.Message)
+			// Foreign key violation message format: Key (column_name)=(value) is still referenced from table "other_table"
+			re := regexp.MustCompile(`Key \((\S+)\)=\((.*?)\)`)
+			matches := re.FindStringSubmatch(pgErr.Message)
+			if len(matches) > 0 {
+				// Extract column and value from the error message
+				return NewAppError(ErrDataIntegrity, "foreign key violation", err, map[string]interface{}{
+					"field": matches[1], // Extracted column name
+					"value": matches[2], // Extracted value
+				})
+			}
+			// If parsing fails, fallback to a generic error
+			return NewAppError(ErrDataIntegrity, "foreign key violation", err, nil)
+
+		case "23502": // Not-null violation
+			// Not-null violation message format: null value in column "column_name" violates not-null constraint
+			re := regexp.MustCompile(`null value in column "(\S+)" violates not-null constraint`)
+			matches := re.FindStringSubmatch(pgErr.Message)
+			if len(matches) > 0 {
+				// Extract column name from the error message
+				return NewAppError(ErrDataIntegrity, "not-null constraint violation", err, map[string]interface{}{
+					"field": matches[1], // Extracted column name
+				})
+			}
+			// If parsing fails, fallback to a generic error
+			return NewAppError(ErrDataIntegrity, "not-null constraint violation", err, nil)
+
 		default:
-			return NewAppError(ErrDatabaseFailure, "database error: "+pgErr.Message)
+			// Handle other cases like duplicate entry or general DB failure
+			return NewAppError(ErrDatabaseFailure, "database error", err, nil)
 		}
 	}
 	// Fallback for unknown DB errors
-	return NewAppError(ErrDatabaseFailure, err.Error())
+	return NewAppError(ErrDatabaseFailure, "database error", err, nil)
+}
+
+func IsAppError(err error) bool {
+	if err == nil {
+		return false
+	}
+	_, ok := err.(*AppError)
+	return ok
 }
 
 func IsErrValidation(err error) bool {
